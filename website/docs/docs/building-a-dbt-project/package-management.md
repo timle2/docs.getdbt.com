@@ -143,9 +143,9 @@ To find the latest release for a package, navigate to the `Releases` tab in the 
 
 As of v0.14.0, dbt will warn you if you install a package using the `git` syntax without specifying a version (see below).
 
-### Private packages
+#### Private packages
 
-#### SSH Key Method
+##### SSH Key Method
 Private packages can be cloned via SSH and an SSH key. When you use SSH keys to authenticate to your git remote server, you don’t need to supply your username and password each time. Read more about SSH keys, how to generate them, and how to add them to your git provider here: [Github](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh) and [GitLab](https://docs.gitlab.com/ee/ssh/).
 
 
@@ -158,7 +158,7 @@ packages:
 
 </File>
 
-#### Git Token Method
+##### Git Token Method
 This method allows the user to clone via HTTPS by passing in a git token via an environment variable. Be careful of the expiration date of any token you use, as an expired token could cause a scheduled run to fail. Additionally, user tokens can create a challenge if the user ever loses access to a specific repo.
 
 
@@ -236,6 +236,45 @@ In general, dbt expects `dbt_project.yml` to be located as a top-level file in a
 packages:
   - git: "https://github.com/dbt-labs/dbt-labs-experimental-features" # git URL
     subdirectory: "materialized-views" # name of subdirectory containing `dbt_project.yml`
+```
+
+</File>
+
+### Tar files
+Packages stored on a web server, avaiable as tar files. For example, hosting private packages on cloud behind firewall.
+
+<File name='packages.yml'>
+
+```yaml
+packages:
+  - tarball: https://s3.console.aws.amazon.com/s3/buckets/internal-dbt-packages/my_package.tar.gz # file hosted online
+```
+
+</File>
+
+For private packages, tarball packages have some advantages over using Git. For users with dbt set up on existing cloud infrastructure, hosting tarballs from a cloud service is much faster and more efficient than the Git method. Additionally, permissioning and authenitcation can be handled on the side of the file host (e.g. S3 IAM panel), so that extra credentials (e.g. Git ssh key) do not need to be bundled with the dbt deployments.
+
+#### Tar file - specify package directory
+By default, it is assumed the tarball contains one directory with the dbt package inside. However, if multiple directories are in the tarfile, the `subdirectory` option can be used to specify it. Say if multiple versions of a package are bundled to a tarfile (e.g. `/package_v001/`, `/package_v002/`), use the `subdirectory` to specify which should be installed. If there is only one folder at the root of the package, this option is not required.
+
+<File name='packages.yml'>
+
+```yaml
+packages:
+  - tarball: https://s3.console.aws.amazon.com/s3/buckets/internal-dbt-packages/my_package.tar.gz # file hosted online
+  - subdirectory: package_v001
+```
+
+</File>
+
+#### Tar file - sha1 hashing
+An optional argument can be supplied to enable sha1 hashing against the downloaded tar file. This can be leveraged to ensure file integrity after download, or if  man-in-the-middle type security attacks are a concern. 
+<File name='packages.yml'>
+
+```yaml
+packages:
+  - tarball: https://s3.console.aws.amazon.com/s3/buckets/internal-dbt-packages/my_package.tar.gz # file hosted online
+  - sha1: 549db5560efccbadc7ec7834c03cf13579199a66
 ```
 
 </File>
